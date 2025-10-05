@@ -1,0 +1,9 @@
+# goal
+float64 x
+float64 y
+---
+# result
+bool success
+---
+# feedback
+float64 dist_goal

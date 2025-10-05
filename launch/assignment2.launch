@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+  <include file="$(find assignment_2_2024)/launch/assignment1.launch" />
+
+  <node name="move_client_node" pkg="nav_pkg" type="action_client_node.py" output="screen" />
+
+  <node name="last_target_service_node" pkg="nav_pkg" type="last_target_service.py" output="screen" />
+</launch>
