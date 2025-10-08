@@ -9,31 +9,37 @@ from nav_pkg.srv import SendTarget, SendTargetResponse
 from std_srvs.srv import SetBool, SetBoolResponse
 import threading
 
+# Global variables
 _last_target = None
 _last_target_lock = threading.Lock()
 
 
-class MoveClientNode:
+class ActionClientNode:
     def __init__(self):
-        rospy.init_node('move_client_node')
-
+        rospy.init_node('action_client_node')
+	
+	# Action client
         self.client = actionlib.SimpleActionClient('/reaching_goal', PlanningAction)
         rospy.loginfo("Waiting for action server '/reaching_goal'...")
         self.client.wait_for_server()
         rospy.loginfo("Connected to '/reaching_goal' action server.")
-
+	
+	# Publishers
         self.robot_state_pub = rospy.Publisher('/robot_state', robot_pos_vel, queue_size=10)
         self.last_target_pub = rospy.Publisher('/last_target', Point, queue_size=1, latch=True)
 
+	# Subscribers
         rospy.Subscriber('/odom', Odometry, self.odom_callback)
 
+	# Services
         self.set_target_srv = rospy.Service('/set_target', SendTarget, self.set_target_callback)
         self.cancel_srv = rospy.Service('/cancel_target', SetBool, self.cancel_callback)
-
+	
+	# State storage
         self.current_odom = None
         self.current_twist = None
 
-        rospy.loginfo("move_client_node ready. Use /set_target to send goals.")
+        rospy.loginfo("action_client_node is ready. Use /set_target to send goals.")
 
     def odom_callback(self, msg):
         """Read odometry and publish custom RobotState."""
@@ -53,16 +59,19 @@ class MoveClientNode:
 
         rospy.loginfo(f"New target received: x={req.x:.2f}, y={req.y:.2f}")
 
+	# Create action goal
         goal = PlanningGoal()
         goal.target_pose = PoseStamped()
         goal.target_pose.pose.position.x = req.x
         goal.target_pose.pose.position.y = req.y
         goal.target_pose.pose.position.z = 0.0
 
+	# Save and publish last target
         with _last_target_lock:
             _last_target = Point(req.x, req.y, 0.0)
             self.last_target_pub.publish(_last_target)
 
+	# Send goal
         self.client.send_goal(goal,
                               done_cb=self.done_cb,
                               active_cb=self.active_cb,
@@ -78,6 +87,7 @@ class MoveClientNode:
         else:
             return SetBoolResponse(success=True, message="No cancellation requested.")
 
+    # Action callback
     def active_cb(self):
         rospy.loginfo("Goal is now active.")
 
@@ -92,5 +102,5 @@ class MoveClientNode:
 
 
 if __name__ == '__main__':
-    node = MoveClientNode()
+    node = ActionClientNode()
     node.spin()

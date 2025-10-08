@@ -6,7 +6,7 @@ from geometry_msgs.msg import Point
 _last_target = None
 
 def last_target_callback(msg):
-    """Receive last target published by move_client."""
+    """Receive last target published by action_client_node."""
     global _last_target
     _last_target = msg
 
