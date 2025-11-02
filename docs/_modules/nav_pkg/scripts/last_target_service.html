@@ -1,0 +1,194 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>nav_pkg.scripts.last_target_service &mdash; nav_pkg 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=eafc0fe6" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=359c27e9"></script>
+      <script src="../../../_static/doctools.js?v=888ff710"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            nav_pkg
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Package Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../action_client_node_source.html">Action Client Node Source Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../last_target_service_source.html">Last Target Service Source Code</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">nav_pkg</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">nav_pkg.scripts.last_target_service</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for nav_pkg.scripts.last_target_service</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">ROS Node: last_target_service_node</span>
+<span class="sd">==================================</span>
+
+<span class="sd">This node provides a service `/get_last_target` that returns the last target</span>
+<span class="sd">position received from the `/last_target` topic.</span>
+
+<span class="sd">The service is useful for other nodes that need to know the most recent target</span>
+<span class="sd">set by the user or another node (e.g., an action client).</span>
+
+<span class="sd">**Published Topics**</span>
+<span class="sd">    None</span>
+
+<span class="sd">**Subscribed Topics**</span>
+<span class="sd">    - `/last_target` (`geometry_msgs/Point`): Receives the last target position.</span>
+
+<span class="sd">**Services**</span>
+<span class="sd">    - `/get_last_target` (`nav_pkg/GetLastTarget`): Returns the last known target position.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">rospy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">nav_pkg.srv</span><span class="w"> </span><span class="kn">import</span> <span class="n">GetLastTarget</span><span class="p">,</span> <span class="n">GetLastTargetResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">geometry_msgs.msg</span><span class="w"> </span><span class="kn">import</span> <span class="n">Point</span>
+
+<span class="n">_last_target</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="last_target_callback"><a class="viewcode-back" href="../../../index.html#nav_pkg.scripts.last_target_service.last_target_callback">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">last_target_callback</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Callback for the `/last_target` topic.</span>
+
+<span class="sd">    This function updates the global variable `_last_target` whenever a new</span>
+<span class="sd">    `geometry_msgs/Point` message is received.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    msg : geometry_msgs.msg.Point</span>
+<span class="sd">        The latest target position published by the `action_client_node`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_last_target</span>
+    <span class="n">_last_target</span> <span class="o">=</span> <span class="n">msg</span></div>
+
+
+<div class="viewcode-block" id="handle_get_last_target"><a class="viewcode-back" href="../../../index.html#nav_pkg.scripts.last_target_service.handle_get_last_target">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">handle_get_last_target</span><span class="p">(</span><span class="n">req</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle service requests to `/get_last_target`.</span>
+
+<span class="sd">    Returns the most recent target position received via the `/last_target`</span>
+<span class="sd">    topic. If no target has been received yet, it returns `(0.0, 0.0)` and</span>
+<span class="sd">    logs a warning.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    req : nav_pkg.srv.GetLastTargetRequest</span>
+<span class="sd">        Empty service request (no parameters).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nav_pkg.srv.GetLastTargetResponse</span>
+<span class="sd">        Response containing the `x` and `y` coordinates of the last target.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_last_target</span>
+    <span class="k">if</span> <span class="n">_last_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;No target has been set yet; returning (0,0)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">GetLastTargetResponse</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">GetLastTargetResponse</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">_last_target</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">_last_target</span><span class="o">.</span><span class="n">y</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../index.html#nav_pkg.scripts.last_target_service.main">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initialize and run the `last_target_service_node`.</span>
+
+<span class="sd">    This function sets up:</span>
+<span class="sd">      - A ROS subscriber to `/last_target` to track the last received target.</span>
+<span class="sd">      - A ROS service `/get_last_target` to provide the stored target on demand.</span>
+
+<span class="sd">    The node runs continuously using `rospy.spin()` until shut down.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">&#39;last_target_service_node&#39;</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s1">&#39;/last_target&#39;</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">last_target_callback</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">Service</span><span class="p">(</span><span class="s1">&#39;/get_last_target&#39;</span><span class="p">,</span> <span class="n">GetLastTarget</span><span class="p">,</span> <span class="n">handle_get_last_target</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Service /get_last_target is ready.&quot;</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">spin</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Luca Carpaneto.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
