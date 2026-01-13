@@ -15,7 +15,7 @@ It allows the user to:
 
 - **Set a new target** (x, y) position
 - **Cancel the current target**
-- **Track progress**
+- **Receive and display feedback from the action server**
 
 Additionally, this node subscribes to `/odom` to read the robot's position and velocity, and publish them as a **custom message**.
 
