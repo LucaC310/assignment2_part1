@@ -63,3 +63,12 @@ highlight_language = 'python'
 source_suffix = '.rst'
 master_doc = 'index'
 html_theme = 'sphinx_rtd_theme'
+# External ROS types not documented by this Sphinx project.
+# Keep their type annotations without requiring local cross-references.
+nitpick_ignore_regex = [
+    ('py:class', r'std_srvs\.srv\.(SetBoolRequest|SetBoolResponse)'),
+    ('py:class', r'nav_msgs\.msg\.Odometry'),
+    ('py:class', r'geometry_msgs\.msg\.Point'),
+    ('py:class', r'assignment_2_2024\.msg\.(PlanningResult|PlanningFeedback)'),
+    ('py:class', r'nav_pkg\.srv\.(SendTargetRequest|SendTargetResponse|GetLastTargetRequest|GetLastTargetResponse)'),
+]

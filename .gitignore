@@ -1,0 +1,8 @@
+# Python bytecode
+__pychace__/
+*.py[code]
+
+# Sphinx temporary files
+docs/.doctrees/
+docs/.buildinfo
+build/
